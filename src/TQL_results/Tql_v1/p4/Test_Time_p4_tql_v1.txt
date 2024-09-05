@@ -1,2 +1,0 @@
-Total time elapsed=0 min
-Mean time elapsed per episode=0 min

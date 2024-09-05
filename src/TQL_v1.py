@@ -7,14 +7,14 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=True
+pre_trained=False
 save=True
 
-prev_test=5
-curr_test=6
+prev_test=1
+curr_test=1
 
 num_episodes_train = 500
-num_episodes_test = 4
+num_episodes_test = 2
 
 stability=50
 
@@ -25,7 +25,7 @@ def shutdown_pc():
 
 def write_config(curr_test, num_episodes_train, num_episodes_test, stability, epsilon, epsilon_decay, epsilon_min, learn_rate, disc_factor, step_limit):
     with open(f"Config_p{curr_test}_tql_v1.txt", "w") as file:
-        file.write(f"Part {curr_test} of training and testing\n")
+        file.write(f"TRAINING/TESTING CONFIGURATION PART {curr_test}\n\n")
         file.write(f"Number of training episodes={num_episodes_train}\n")
         file.write(f"Number of test episodes={num_episodes_test}\n")
         file.write(f"Stability={stability}\n")
@@ -97,51 +97,30 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
         Q = {}
 
     x=1/(num_episodes_train-stability)
-    #print(x)
-    #y=1/num_episodes_train
-    #print(y)
 
     # Hyperparameters
     epsilon=1                                       #epsilon
     epsilon_min=0.2
     a=epsilon_min/epsilon
-    #print(a)
-    epsilon_decay=a**x                                  #(exponential decay) so that last 30 episodes is stable at 0.2
-    #print(f"epsilon_decay={epsilon_decay}")
+    epsilon_decay=a**x                                  #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
     alpha = 0.8                                   # learning rate (alpha)
-    """
-    learn_min = 0.01
-    b=learn_min/learn_rate
-    #print(b)
-    learn_decay=b**y                                    #(exponential decay)
-    #print(f"learn_decay={learn_decay}") 
-    """
     
     gamma = 0.99                                  # discount rate (gamma) see how to modify during training
-    """
-    disc_min = 0.01
-    c=disc_min/disc_factor
-    #print(c)
-    disc_decay=c**y                                     #(exponential decay)
-    #print(f"disc_decay={disc_decay}")
-    """
 
     #counters for number of exploration and exploitation choices per episode
     explor_count=np.zeros(num_episodes)
     exploit_count=np.zeros(num_episodes)
 
-    # Training loop
+    # Keep track of reward per episode
     total_reward_per_episode=np.zeros(num_episodes)
     
-    # List to keep track of epsilon, alpha and disc decay
+    # List to keep track of epsilon
     epsilon_history = []
-    #alpha_history = []
-    #disc_history = []
 
     step_limit=17000
 
-    #time elapsed for each episode and cumulative time
+    #time elapsed per episode and cumulative time
     time_per_episode=np.zeros(num_episodes_train)
     total_time_execution=0
 
@@ -149,11 +128,10 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
 
     for episode in range(num_episodes):
         state = env.reset()[0]
-        #print(state)
+        start_time=time.time()
         done = False
         step_count=0
-        start_time=time.time()
-
+        
         while not done:
             
             # Choose action: explore or exploit
@@ -174,8 +152,6 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
                     action =  env.action_space.sample()  
 
             next_state, reward, done, _, info = env.step(action)
-            
-            total_reward_per_episode[episode] += reward
 
             step_count+=1
 
@@ -186,6 +162,7 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
             if info['lives']<=0:
                 message='You died, GAME OVER!'
 
+            total_reward_per_episode[episode] += reward
 
             # Update Q-table:
 
@@ -220,23 +197,12 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
         print(f"Time elapsed: {time_per_episode[episode]:.0f} s,")
         print(f"Steps Taken: {step_count},")
         print(f"Epsilon: {epsilon:.4f},")
-        #print(f"Alpha: {alpha:.4f},")
-        #print(f"Disc_factor: {gamma:.4f},")
         print(f"Total Reward: {total_reward_per_episode[episode]:.2f}")
         print('-------------------------------------------------')
         
-
-        # Decay epsilon, alpha and disc_factor
+        # Decay epsilon
         epsilon = max(epsilon_min, epsilon*epsilon_decay)
         epsilon_history.append(epsilon)
-        
-        """
-        alpha = max(learn_min, alpha*learn_decay)
-        alpha_history.append(alpha)
-
-        gamma = max(disc_min, gamma*disc_decay)
-        disc_history.append(gamma)
-        """
 
     env.close()
 
@@ -247,7 +213,7 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
     window_size = 50
 
     # Moving average
-    #moving_avg_reward = np.convolve(total_reward_per_episode, np.ones(window_size) / window_size, mode='valid')
+    
     moving_avg_reward = [
         np.mean(total_reward_per_episode[i:i + window_size])
         for i in range(0, len(total_reward_per_episode), window_size)
@@ -265,16 +231,6 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
     plt.ylabel('Total Reward')
     plt.title(f'TQL Training p{curr_test}: Total Reward per Episode')
     plt.savefig(f'Training_Reward_p{curr_test}_tql_v1.png')
-
-    
-    """
-    plt.figure()
-    plt.plot(range(1, num_episodes + 1), total_reward_per_episode)
-    plt.xlabel('Episodes')
-    plt.ylabel('Total Reward')
-    plt.title(f'TQL Training p{curr_test}: Total Reward per Episode')
-    plt.savefig(f'Training_Reward_p{curr_test}_tql_v1.png')
-    """
 
     plt.figure()
     plt.plot(range(1, num_episodes + 1), explor_count)
@@ -297,36 +253,20 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
     plt.title(f'TQL Training p{curr_test}: Epsilon value per Episode')
     plt.savefig(f'Epsilon_p{curr_test}_tql_v1.png')
 
-    """
-    plt.figure()
-    plt.plot(range(1, num_episodes + 1), alpha_history)
-    plt.xlabel('Episodes')
-    plt.ylabel('Alpha')
-    plt.title(f'TQL Training p{curr_test}: Alpha value per Episode')
-    plt.savefig(f'Alpha_p{curr_test}_tql_v1.png')
-
-    plt.figure()
-    plt.plot(range(1, num_episodes + 1), disc_history)
-    plt.xlabel('Episodes')
-    plt.ylabel('Discount Factor')
-    plt.title(f'TQL Training p{curr_test}: Disc_factor value per Episode')
-    plt.savefig(f'Discount_p{curr_test}_tql_v1.png')
-    """
-
     #save time elapsed
     tot_time_minutes=total_time_execution/60
     mean_time_seconds=np.mean(time_per_episode)
     with open(f"Training_Time_p{curr_test}_tql_v1.txt", "w") as file:
         if(tot_time_minutes<60):
-            file.write(f"Total time elapsed={tot_time_minutes:.0f} min")
+            file.write(f"Total time = {tot_time_minutes:.0f} min")
         else:
-            file.write(f"Total time elapsed={(tot_time_minutes/60):.0f} h")
+            file.write(f"Total time = {(tot_time_minutes/60):.0f} h")
         file.write('\n')
-        file.write(f"Mean time elapsed per episode={mean_time_seconds:.0f} min")
+        file.write(f"Mean time per episode = {mean_time_seconds:.0f} min")
     
 def test(env, num_episodes=num_episodes_test):
     
-    print("INIZIO FASE TESTING")
+    print(f"INIZIO FASE TESTING PART {curr_test}")
     print('\n')
 
     Q = load_q_table2()
@@ -346,10 +286,10 @@ def test(env, num_episodes=num_episodes_test):
 
     for episode in range(num_episodes):
         state = env.reset()[0]
+        start_time=time.time()
         done = False
         step_count=0
-        start_time=time.time()
-
+        
         while not done:
             
             # Choose action: 
@@ -359,13 +299,11 @@ def test(env, num_episodes=num_episodes_test):
                 action_values = Q[state_tuple]
                 action = np.argmax(action_values)
                 state_in_Q[episode]+=1
-                #print(f'Sono in argmax e lo stato esiste in Q: {action}')
             else:
                 #Exploration: since that state was not discovered yet 
                 action = env.action_space.sample()
                 state_not_in_Q[episode]+=1
-                #print(f'Sono in random perchè lo stato non esiste in Q: {action}')
-
+                
             next_state, reward, done, _, info = env.step(action)
 
             total_reward_per_episode[episode] += reward
@@ -374,12 +312,10 @@ def test(env, num_episodes=num_episodes_test):
 
             if step_count >= step_limit:
                 message='Step Limit achieved, TIMEOUT!'
-                #print('Step Limit achieved... Game over!')
                 done=True
             
             if info['lives']<=0:
                 message='You died, GAME OVER!'
-                #print('You died... Game over')
             
             # Update state and statistics
             state = next_state
@@ -402,7 +338,7 @@ def test(env, num_episodes=num_episodes_test):
     window_size = 1
 
     # Moving average
-    #moving_avg_reward = np.convolve(total_reward_per_episode, np.ones(window_size) / window_size, mode='valid')
+
     moving_avg_reward = [
         np.mean(total_reward_per_episode[i:i + window_size])
         for i in range(0, len(total_reward_per_episode), window_size)
@@ -420,15 +356,6 @@ def test(env, num_episodes=num_episodes_test):
     plt.ylabel('Total Reward')
     plt.title(f'TQL Test p{curr_test}: Total Reward per Episode')
     plt.savefig(f'Test_Reward_p{curr_test}_tql_v1.png')
-
-    """
-    plt.figure()
-    plt.plot(range(1, num_episodes + 1), total_reward_per_episode)
-    plt.xlabel('Episodes')
-    plt.ylabel('Total Reward')
-    plt.title(f'TQL Test p{curr_test}: Total Reward per Episode')
-    plt.savefig(f'Test_Reward_p{curr_test}_tql_v1.png')
-    """
 
     plt.figure()
     plt.plot(range(1, num_episodes + 1), state_in_Q)
@@ -456,29 +383,33 @@ def test(env, num_episodes=num_episodes_test):
     mean_time_seconds=np.mean(time_per_episode)
     with open(f"Test_Time_p{curr_test}_tql_v1.txt", "w") as file:
         if(tot_time_minutes<60):
-            file.write(f"Total time elapsed={tot_time_minutes:.0f} min")
+            file.write(f"Total time = {tot_time_minutes:.0f} min")
         else:
-            file.write(f"Total time elapsed={(tot_time_minutes/60):.0f} h")
+            file.write(f"Total time = {(tot_time_minutes/60):.0f} h")
         file.write('\n')
-        file.write(f"Mean time elapsed per episode={mean_time_seconds:.0f} min")
+        file.write(f"Mean time per episode = {mean_time_seconds:.0f} min")
 
 if __name__ == '__main__':
+
+    #TRAINING
     render_train=False
     env = gym.make('ALE/Pitfall-ram-v5', obs_type='ram', render_mode="human" if render_train else None)
     seed_everything(42, env)
     train(env=env)
 
+    #TESTING
     render_test=False
     env = gym.make('ALE/Pitfall-ram-v5', obs_type='ram', render_mode="human" if render_test else None)
     seed_everything(42, env)
     test(env=env)
 
+    #ORDERING PERFORMANCE FILES
     src = os.getcwd()
     dest = f'{src}\TQL_results\Tql_v1\p{curr_test}'
-    string = 'tql_v1'
-
+    string = f'p{curr_test}_tql_v1'
     move_file(src, dest, string)
 
+    #SHUTDOWN PC
     if(shutdown):
         shutdown_pc()
 

@@ -1,2 +1,0 @@
-Total time elapsed=15 min
-Mean time elapsed per episode=2 min

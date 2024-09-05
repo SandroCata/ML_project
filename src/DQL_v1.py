@@ -25,11 +25,11 @@ stability=50
 shutdown=False
 
 def shutdown_pc():
-        os.system("shutdown /s /t 5")  # /s spegne il computer, /t 1 indica un ritardo di 1 secondo
+        os.system("shutdown /s /t 5")  # /s shuts pc down, /t 5 means: "with delay of 5 seconds"
 
 def write_config(curr_test, num_episodes_train, num_episodes_test, stability, epsilon, epsilon_decay, epsilon_min, learn_rate, weight_decay, disc_factor, rep_mem_size, batch_size, step_limit):
     with open(f"Config_p{curr_test}_dqn_v1.txt", "w") as file:
-        file.write(f"Part {curr_test} of training and testing\n")
+        file.write(f"TRAINING/TESTING CONFIGURATION PART {curr_test}\n\n")
         file.write(f"Number of training episodes={num_episodes_train}\n")
         file.write(f"Number of test episodes={num_episodes_test}\n")
         file.write(f"Stability={stability}\n")
@@ -112,6 +112,7 @@ class DQN(nn.Module):
         super().__init__()
 
         # Define network layers
+
         self.fc1 = nn.Linear(state_size, h1_nodes)   # first fully connected layer
         self.fc2 = nn.Linear(h1_nodes, h2_nodes)     # second fully connected layer
         #self.fc3 = nn.Linear(h2_nodes, h3_nodes)     # third fully connected layer
@@ -144,58 +145,39 @@ class ReplayMemory():
 class PitfallDQL():
 
     x=1/(num_episodes_train-stability)
-    #print(x)
-    #y=1/num_episodes_train
-    #print(y)
 
     # Hyperparameters
 
-    explor_rate=1                                       #epsilon
+    explor_rate=1                                        #epsilon
     epsilon_min=0.2
     a=epsilon_min/explor_rate
-    #print(a)
-    epsilon_decay=a**x                                  #(exponential decay) so that last 30 episodes is stable at 0.2
-    #print(f"epsilon_decay={epsilon_decay}")
+    epsilon_decay=a**x                                   #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
     learn_rate = 0.001                                   # learning rate (alpha)
-    """
-    learn_min = 0.01
-    b=learn_min/learn_rate
-    #print(b)
-    learn_decay=b**y                                    #(exponential decay)
-    #print(f"learn_decay={learn_decay}") 
-    """
-    
-    disc_factor = 0.99                                  # discount rate (gamma)
-    """
-    disc_min = 0.01
-    c=disc_min/disc_factor
-    #print(c)
-    disc_decay=c**y                                     #(exponential decay)
-    #print(f"disc_decay={disc_decay}")
-    """
-    
-    replay_memory_size = 100000                        # size of replay memory
-    batch_size = 32                                    # size of the training data set sampled from the replay memory
-
-    #alpha_nd=0.8                                        #alpha in non deterministic formula
     weight_decay=0.001
+    
+    disc_factor = 0.99                                   # discount rate (gamma)
+    
+    replay_memory_size = 100000                          # size of replay memory
+    batch_size = 32                                      # size of the training data set sampled from the replay memory
 
     # Neural Network
-    loss_fn = nn.MSELoss()          # NN Loss function. MSE=Mean Squared Error.
-    optimizer = None                # NN Optimizer. Later.
+    loss_fn = nn.MSELoss()                               # NN Loss function. MSE=Mean Squared Error.
+    optimizer = None                                     # NN Optimizer. Later.
 
     #from 0 to 17
     #FULL_ACTIONS = ['NOOP', 'FIRE', 'UP', 'RIGHT', 'LEFT', 'DOWN', 
     #               'UPRIGHT', 'UPLEFT', 'DOWNRIGHT', 'DOWNLEFT', 'UPFIRE', 'RIGHTFIRE', 
     #               'LEFTFIRE', 'DOWNFIRE', 'UPRIGHTFIRE', 'UPLEFTFIRE', 'DOWNRIGHTFIRE', 'DOWNLEFTFIRE']    
 
-    def optimize(self, mini_batch, target_dqn, mean_loss_episode, episode):
+    def optimize(self, mini_batch, target_dqn, cumulative_loss_episode, episode):
         current_q_list = []
         target_q_list = []
 
         for state, action, new_state, reward, done in mini_batch:
-            # Convert state, action, new_state to tensors
+
+            # Convert each component (except done) of a single transition into tensor
+
             state = torch.tensor(state, dtype=torch.float32).to(device)
             action = torch.tensor(action, dtype=torch.int64).to(device)
             new_state = torch.tensor(new_state, dtype=torch.float32).to(device)
@@ -204,6 +186,7 @@ class PitfallDQL():
 
 
             # Compute the current Q value using the target network
+
             #current_q = target_dqn(state).gather(0, action.unsqueeze(0))
             current_q = target_dqn(state)[action]
             current_q_list.append(current_q)
@@ -215,36 +198,36 @@ class PitfallDQL():
                 with torch.no_grad():
                     next_max_q = target_dqn(new_state).max()
                     target_q = reward + self.disc_factor * next_max_q
-                    #target_q = (1 - self.learn_rate) * current_q + self.learn_rate * (reward + self.disc_factor * next_max_q)
 
             # Append target Q to the list
+
             target_q_list.append(target_q.squeeze(0))
 
         # Stack the Q values to compute the loss
+
         current_q_batch = torch.stack(current_q_list)#.squeeze()
         target_q_batch = torch.stack(target_q_list)
         #print(f'current_q_values for batch={current_q_batch}')
         #print(f'target_q_values for batch={target_q_batch}')
 
         # Compute the loss between the current Q values and the target Q values
+
         loss = self.loss_fn(current_q_batch, target_q_batch)
         #print(f'loss for batch={loss}')
         #print(f'loss item for batch={loss.item()}')
 
-        # Update the mean loss for this episode
-        mean_loss_episode[episode] += loss.item()
+        # Update the cumulative loss for this episode
+        cumulative_loss_episode[episode] += loss.item()
         #print(f'mean_loss_episode after update: {mean_loss_episode[episode]}')
 
         # Optimize the model
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
-        #return loss.item()
     
     def train(self, env, episodes=num_episodes_train):
 
-        print("INIZIO FASE TRAINING")
+        print(f"INIZIO FASE TRAINING PART{curr_test}")
         print('\n')
 
         state_size = 128
@@ -252,7 +235,8 @@ class PitfallDQL():
         
         memory = ReplayMemory(self.replay_memory_size)
 
-        # Create target network. Number of nodes in the hidden layer can be adjusted.
+        # Create target network.
+
         target_dqn = DQN(state_size=state_size, h1_nodes=512, h2_nodes=128, action_size=num_actions).to(device)
         
         if pre_trained:
@@ -261,28 +245,33 @@ class PitfallDQL():
                 target_dqn.load_state_dict(loaded_state['target_dqn_state_dict'])
                 memory.memory = loaded_state['replay_memory']                           
 
-        # Policy network optimizer. 
+        # Policy network optimizer.
+
         self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate, weight_decay=self.weight_decay)                
 
-        # List to keep track of rewards collected per episode. Initialize list to 0's.
+        # Keep track of rewards collected per episode.
+
         total_reward_per_episode = np.zeros(num_episodes_train)
 
-        # List to keep track of epsilon, alpha and disc decay
+        # List to keep track of epsilon
+
         epsilon_history = []
-        #alpha_history = []
-        #disc_history = []
 
         #Used for resetting env and starting new episode when certain amount of steps has been executed
+
         step_limit=17000
 
         #counters for number of exploration and exploitation choices per episode
+
         explor_count=np.zeros(num_episodes_train)
         exploit_count=np.zeros(num_episodes_train)
 
-        #mean loss per episode (sum of the batches losses divided by the number of steps)
+        #cumulative loss per episode (which will be divided by the number of steps to compute mean loss per episode)
+
         mean_loss_episodes=np.zeros(num_episodes_train)
         
-        #time elapsed for each episode and cumulative time
+        #Keep track of time elapsed per episode and cumulative training time
+
         time_per_episode=np.zeros(num_episodes_train)
         total_time_execution=0
 
@@ -290,103 +279,100 @@ class PitfallDQL():
 
         for i in range(episodes):
             state = env.reset()[0]  # Initialize to state 0
+            start_time=time.time()
             done=False
             step_count=0
-            start_time=time.time()
-
+            updates=0
+            
             # Agent navigates map until it dies three times, collect all treasures or steps limit is achieved
             while(not done):
 
-                # Select action based on epsilon-greedy
+                # Epsilon-greedy action selection
+
+                # Exploration
                 if random.random() < self.explor_rate:
-                    # select random action
                     explor_count[i]+=1
                     action=env.action_space.sample()
-                    #print(action) 
+                     
+                # Exploitation
                 else:
-                    # select best action
                     exploit_count[i]+=1            
                     with torch.no_grad():
                         state_tensor = torch.tensor(state, dtype=torch.float32).to(device)
                         action = target_dqn(state_tensor).argmax().item()
-                        #print(action)
+                        
 
                 # Execute action
+
                 new_state, reward, done, _, info = env.step(action)
 
                 if info['lives']<=0:
                     message='You died, GAME OVER!'
-                    #print('You died, GAME OVER!')
 
                 # Save experience into memory
+
                 memory.append((state, action, new_state, reward, done)) 
 
                 # Move to the next state
+
                 state = new_state
 
                 # Increment step counter
+
                 step_count+=1
 
-                # Keep track of the rewards collected per episode.
+                # Update cumulative reward per episode.
+
                 total_reward_per_episode[i] += reward
 
-                # Copy policy network to target network after a certain number of steps
+                #Reset env if step limit achieved
+
                 if step_count >= step_limit:
                     message='Step Limit achieved, TIMEOUT!'
-                    #print('Step Limit achieved, GAME OVER!')
                     done=True
                 
                 if len(memory) >= self.batch_size:
                     mini_batch = memory.sample(self.batch_size)
-                    self.optimize(mini_batch, target_dqn, mean_loss_episodes, i) 
+                    self.optimize(mini_batch, target_dqn, mean_loss_episodes, i)
+                    updates+=1 
 
-            #last phase to compute the mean loss for the current episode
-            #print(f'mean_loss_episode[i] before division: {mean_loss_episodes[i]}')
-            mean_loss_episodes[i]/=step_count
-            #print(f'mean_loss_episode[i] after division: {mean_loss_episodes[i]}')
+            #Compute the mean loss for the current episode
+
+            mean_loss_episodes[i]/=updates
 
             time_per_episode[i]=(time.time()-start_time)
             total_time_execution+=time_per_episode[i]
 
             # Print episode statistics
+
             print(f"EPISODE {i + 1}/{num_episodes_train} ({message}):")
             print(f"Time elapsed: {time_per_episode[i]:.0f} s,")
             print(f"Steps Taken: {step_count},")
             print(f"Epsilon: {self.explor_rate:.4f},")
-            #print(f"Alpha: {self.learn_rate:.4f},")
-            #print(f"Disc_factor: {self.disc_factor:.4f},")
             print(f"Mean Loss: {mean_loss_episodes[i]:.2f},")
             print(f"Total Reward: {total_reward_per_episode[i]:.2f}")
             print('-------------------------------------------------')
             
 
-            # Decay epsilon, alpha and disc_factor
+            # Decay epsilon
+
             self.explor_rate = max(self.epsilon_min, self.explor_rate*self.epsilon_decay)
             epsilon_history.append(self.explor_rate)
 
-            """
-            self.learn_rate = max(self.learn_min, self.learn_rate*self.learn_decay)
-            alpha_history.append(self.learn_rate)
-            """
-
-            """
-            self.disc_factor = max(self.disc_min, self.disc_factor*self.disc_decay)
-            disc_history.append(self.disc_factor)
-            """
-
         # Close environment
+
         env.close()
 
         # Save policy
+
         if save:
             save_training_state(target_dqn, memory)
 
-        # window of moving average
+        # Window of moving average
+
         window_size = 50
 
         # Moving average
-        #moving_avg_reward = np.convolve(total_reward_per_episode, np.ones(window_size) / window_size, mode='valid')
-        #moving_avg_loss = np.convolve(mean_loss_episodes, np.ones(window_size) / window_size, mode='valid')
         
         moving_avg_reward = [
             np.mean(total_reward_per_episode[i:i + window_size])
@@ -397,7 +383,9 @@ class PitfallDQL():
             for i in range(0, len(mean_loss_episodes), window_size)
         ]
 
-        # Definisci l'asse x per la media mobile usando il centro di ogni blocco
+        #x-axis for moving average centered in window size:
+        #Every window_size episode an avg pint is computed and displayedin the statistics
+
         x_moving_avg = np.arange(window_size, episodes + 1, window_size)
 
         #Plotting
@@ -405,7 +393,6 @@ class PitfallDQL():
         plt.figure()
         plt.plot(range(1, episodes + 1), total_reward_per_episode, label='Total Reward per Episode', color='green')
         plt.plot(x_moving_avg, moving_avg_reward, label='Moving Average', color='red')
-        #plt.plot(range(window_size, episodes + 1), moving_avg_reward, label='Moving Average', color='red')
         plt.xlabel('Episode')
         plt.ylabel('Total Reward')
         plt.title(f'DQL Training p{curr_test}: Total Reward per Episode')
@@ -415,27 +402,10 @@ class PitfallDQL():
         plt.figure()
         plt.plot(range(1, episodes + 1), mean_loss_episodes, label='Mean Loss per Episode', color='green')
         plt.plot(x_moving_avg, moving_avg_loss, label='Moving Average', color='red')
-        #plt.plot(range(window_size, episodes + 1), moving_avg_loss, label='Moving Average', color='red')
         plt.xlabel('Episode')
         plt.ylabel('Mean Loss')
         plt.title(f'DQL Training p{curr_test}: Mean Loss per Episode')
         plt.savefig(f'Mean_Loss_p{curr_test}_dqn_v1.png')
-        
-        """
-        plt.figure()
-        plt.plot(range(1, episodes + 1), total_reward_per_episode)
-        plt.xlabel('Episodes')
-        plt.ylabel('Total Reward')
-        plt.title(f'DQL Training p{curr_test}: Total Reward per Episode')
-        plt.savefig(f'Training_Reward_p{curr_test}_dqn_v1.png')
-
-        plt.figure()
-        plt.plot(range(1, episodes + 1), mean_loss_episodes)
-        plt.xlabel('Episodes')
-        plt.ylabel('Mean Loss')
-        plt.title(f'DQL Training p{curr_test}: Mean Loss per Episode')
-        plt.savefig(f'Mean_Loss_p{curr_test}_dqn_v1.png')
-        """
 
         plt.figure()
         plt.plot(range(1, episodes + 1), explor_count)
@@ -458,44 +428,28 @@ class PitfallDQL():
         plt.title(f'DQL Training p{curr_test}: Epsilon value per Episode')
         plt.savefig(f'Epsilon_p{curr_test}_dqn_v1.png')
 
-        """
-        plt.figure()
-        plt.plot(range(1, episodes + 1), alpha_history)
-        plt.xlabel('Episodes')
-        plt.ylabel('Alpha')
-        plt.title(f'DQL Training p{curr_test}: Alpha value per Episode')
-        plt.savefig(f'Alpha_p{curr_test}_dqn_v1.png')
-        """
+        #Save time elapsed
 
-        """
-        plt.figure()
-        plt.plot(range(1, episodes + 1), disc_history)
-        plt.xlabel('Episodes')
-        plt.ylabel('Discount Factor')
-        plt.title(f'DQL Training p{curr_test}: Disc_factor value per Episode')
-        plt.savefig(f'Discount_p{curr_test}_dqn_v1.png')
-        """
-
-        #save time elapsed
         tot_time_minutes=total_time_execution/60
         mean_time_minutes=np.mean(time_per_episode)/60
         with open(f"Training_Time_p{curr_test}_dqn_v1.txt", "w") as file:
             if(tot_time_minutes<60):
-                file.write(f"Total time elapsed={tot_time_minutes:.0f} min")
+                file.write(f"Total time = {tot_time_minutes:.0f} min")
             else:
-                file.write(f"Total time elapsed={(tot_time_minutes/60):.0f} h")
+                file.write(f"Total time = {(tot_time_minutes/60):.0f} h")
             file.write('\n')
-            file.write(f"Mean time elapsed per episode={mean_time_minutes:.0f} min")
+            file.write(f"Mean time per episode = {mean_time_minutes:.0f} min")
 
     def test(self, env, episodes=num_episodes_test):
 
-        print("INIZIO FASE TESTING")
+        print(f"INIZIO FASE TESTING PART{curr_test}")
         print('\n')
 
         state_size = 128
         num_actions = env.action_space.n
 
-        # Load learned policy
+        #Load trained network
+
         target_dqn = DQN(state_size=state_size, h1_nodes=512, h2_nodes=128, action_size=num_actions).to(device)
         
         loaded_state = load_training_state_2()
@@ -507,6 +461,7 @@ class PitfallDQL():
         step_limit=17000
 
         #time elapsed for each episode and cumulative time
+
         time_per_episode=np.zeros(num_episodes_train)
         total_time_execution=0
 
@@ -516,22 +471,24 @@ class PitfallDQL():
             step_count=0
             start_time=time.time()
             
-            # Agent navigates game until it looses all lives, collects all treasures, or timeout.
+            # Agent navigates game until it looses all lives, collects all treasures, or step limit achieved.
+            
             while not done:
 
                 #select best action             
+                
                 with torch.no_grad():
                     state_tensor = torch.tensor(state, dtype=torch.float32).to(device)
                     action = target_dqn(state_tensor).argmax().item()
-                    #print(action)
-
 
                 # Execute action
+                
                 new_state, reward, done, _, info = env.step(action)
+
+                #Reset env if step limit achieved
 
                 if info['lives']<=0:
                     message='You died, GAME OVER!'
-                    #print('You died... Game over')
 
                 state=new_state
 
@@ -539,10 +496,9 @@ class PitfallDQL():
                 
                 total_reward_per_episode[i]+=reward
 
-                # Copy policy network to target network after a certain number of steps
+                
                 if step_count >= step_limit:
                     message='Step Limit achieved, TIMEOUT!'
-                    #print('Step Limit achieved... Game over!')
                     done=True
 
             steps_taken[i]=step_count
@@ -551,7 +507,6 @@ class PitfallDQL():
             total_time_execution+=time_per_episode[i]
 
             # Print episode statistics
-            #print(f"Episode {i + 1}/{num_episodes_test}, Total Reward: {total_reward_per_episode[i]}, Steps Taken: {steps_taken[i]}")
             
             print(f"EPISODE {i + 1}/{num_episodes_test} ({message}):")
             print(f"Time elapsed: {time_per_episode[i]:.0f} s,")
@@ -562,10 +517,11 @@ class PitfallDQL():
         env.close()
 
         # window of moving average
+
         window_size = 1
 
         # Moving average
-        #moving_avg_reward = np.convolve(total_reward_per_episode, np.ones(window_size) / window_size, mode='valid')
+       
         moving_avg_reward = [
             np.mean(total_reward_per_episode[i:i + window_size])
             for i in range(0, len(total_reward_per_episode), window_size)
@@ -583,15 +539,6 @@ class PitfallDQL():
         plt.title(f'DQL Test p{curr_test}: Total Reward per Episode')
         plt.savefig(f'Test_Reward_p{curr_test}_dqn_v1.png')
 
-        """
-        plt.figure()
-        plt.plot(range(1, num_episodes_test + 1), total_reward_per_episode)
-        plt.xlabel('Episodes')
-        plt.ylabel('Total Reward')
-        plt.title(f'DQL Test p{curr_test}: Total Reward per Episode')
-        plt.savefig(f'Test_Reward_p{curr_test}_dqn_v1.png')
-        """
-
         plt.figure()
         plt.plot(range(1, num_episodes_test + 1), steps_taken)
         plt.xlabel('Episodes')
@@ -604,30 +551,33 @@ class PitfallDQL():
         mean_time_minutes=np.mean(time_per_episode)/60
         with open(f"Test_Time_p{curr_test}_dqn_v1.txt", "w") as file:
             if(tot_time_minutes<60):
-                file.write(f"Total time elapsed={tot_time_minutes:.0f} min")
+                file.write(f"Total time = {tot_time_minutes:.0f} min")
             else:
-                file.write(f"Total time elapsed={(tot_time_minutes/60):.0f} h")
+                file.write(f"Total time = {(tot_time_minutes/60):.0f} h")
             file.write('\n')
-            file.write(f"Mean time elapsed per episode={mean_time_minutes:.0f} min")
+            file.write(f"Mean time per episode = {mean_time_minutes:.0f} min")
 
 if __name__ == '__main__':
     pitfall_dql = PitfallDQL()
 
+    #TRAINING
     render_train=False
     env = gym.make('ALE/Pitfall-ram-v5', obs_type='ram', render_mode="human" if render_train else None)
     seed_everything(42, env)
     pitfall_dql.train(env=env)
 
+    #TESTING
     render_test=False
     env = gym.make('ALE/Pitfall-ram-v5', obs_type='ram', render_mode="human" if render_test else None)
     seed_everything(42, env)
     pitfall_dql.test(env=env)
 
+    #ORDERING PERFORMANCE FILES
     src = os.getcwd()
     dest = f'{src}\DQL_results\Dqn_v1\p{curr_test}'
     string = f'p{curr_test}_dqn_v1'
-
     move_file(src, dest, string)
 
+    #SHUTDOWN PC
     if(shutdown):
         shutdown_pc()
