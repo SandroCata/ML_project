@@ -20,7 +20,7 @@ prev_test=1
 curr_test=1
 
 num_episodes_train = 500
-num_episodes_test = 4
+num_episodes_test = 2
 
 stability=50
 
@@ -157,7 +157,7 @@ class PitfallDQL():
     epsilon_decay=a**x                                  #(exponential decay) so that last 30 episodes is stable at 0.2
     #print(f"epsilon_decay={epsilon_decay}")
 
-    learn_rate = 0.0001                                   # learning rate (alpha)
+    learn_rate = 0.001                                   # learning rate (alpha)
     """
     learn_min = 0.01
     b=learn_min/learn_rate
@@ -178,7 +178,7 @@ class PitfallDQL():
     replay_memory_size = 100000                        # size of replay memory
     batch_size = 32                                    # size of the training data set sampled from the replay memory
 
-    alpha_nd=0.8                                       #alpha in non deterministic formula
+    #alpha_nd=0.8                                       #alpha in non deterministic formula
 
     # Neural Network
     loss_fn = nn.MSELoss()          # NN Loss function. MSE=Mean Squared Error.
@@ -214,8 +214,8 @@ class PitfallDQL():
             else:
                 with torch.no_grad():
                     next_max_q = target_dqn(new_state).max()
-                    #target_q = reward + self.disc_factor * next_max_q
-                    target_q = (1 - self.alpha_nd) * current_q + self.alpha_nd * (reward + self.disc_factor * next_max_q)
+                    target_q = reward + self.disc_factor * next_max_q
+                    #target_q = (1 - self.alpha_nd) * current_q + self.alpha_nd * (reward + self.disc_factor * next_max_q)
 
             # Append target Q to the list
             #print(f'target_q={target_q.squeeze(0)}')
@@ -264,7 +264,7 @@ class PitfallDQL():
         #print(f"State_dict at the beginning of training {target_dqn.state_dict()}")
 
         # Policy network optimizer. 
-        self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate)                
+        self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate, weight_decay=0.001)                
 
         # List to keep track of rewards collected per episode. Initialize list to 0's.
         total_reward_per_episode = np.zeros(num_episodes_train)

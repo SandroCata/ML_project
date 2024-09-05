@@ -18,7 +18,7 @@ prev_test=1
 curr_test=1
 
 num_episodes_train = 500
-num_episodes_test = 4
+num_episodes_test = 2
 
 stability=50
 
@@ -156,7 +156,7 @@ class PitfallDQL():
     epsilon_decay=a**x                                  #(exponential decay) so that last 30 episodes is stable at 0.2
     #print(f"epsilon_decay={epsilon_decay}")
 
-    learn_rate = 0.0001                                   # learning rate (alpha)
+    learn_rate = 0.001                                   # learning rate (alpha)
     """
     learn_min = 0.01
     b=learn_min/learn_rate
@@ -177,7 +177,7 @@ class PitfallDQL():
     replay_memory_size = 100000                        # size of replay memory
     batch_size = 32                                    # size of the training data set sampled from the replay memory
 
-    alpha_nd=0.8                                        #alpha in non deterministic formula
+    #alpha_nd=0.8                                        #alpha in non deterministic formula
     
 
     # Neural Network
@@ -189,63 +189,6 @@ class PitfallDQL():
     #               'UPRIGHT', 'UPLEFT', 'DOWNRIGHT', 'DOWNLEFT', 'UPFIRE', 'RIGHTFIRE', 
     #               'LEFTFIRE', 'DOWNFIRE', 'UPRIGHTFIRE', 'UPLEFTFIRE', 'DOWNRIGHTFIRE', 'DOWNLEFTFIRE']    
 
-    """
-    def optimize(self, mini_batch, target_dqn, mean_loss_episode, episode):
-        current_q_list = []
-        target_q_list = []
-
-        for state, action, new_state, reward, done in mini_batch:
-
-            # Convert state, action, new_state to tensors
-            state = np.array(state)
-            action = np.array(action)
-            new_state = np.array(new_state)
-
-            state = torch.tensor(state, dtype=torch.float32).to(device)
-            action = torch.tensor(action, dtype=torch.int64).to(device)
-            new_state = torch.tensor(new_state, dtype=torch.float32).to(device)
-
-            # Compute the current Q value using the target network
-            current_q = target_dqn(state)[action]
-            print(f'q_value={current_q}')
-            current_q_list.append(current_q)
-            
-            
-            if done: 
-                # When in a terminated state, target q value should be set to the reward.
-                target_q = reward
-            else:
-                with torch.no_grad():
-                    next_max_q = target_dqn(new_state).max()
-                    #print(f'next_q_value={next_max_q}')
-                    target_q = reward + self.disc_factor *next_max_q
-
-            # Adjust the specific action to the target that was just calculated
-            target_q_list.append(target_q)
-
-        # Stack the Q values to compute the loss
-        current_q_batch = torch.stack(current_q_list)
-        target_q_batch = torch.stack(target_q_list)
-        #print(f'current_q_values for batch={current_q_batch}')
-        #print(f'target_q_values for batch={target_q_batch}')
-
-        # Compute the loss between the current Q values and the target Q values
-        loss = self.loss_fn(current_q_batch, target_q_batch)
-        #print(f'loss for batch={loss}')
-
-        #print(f'mean_loss_episode before update: {mean_loss_episode[episode]}')
-        #sum the loss for this step in the total loss sum (at the end of the episode to be divided for step_counter)
-        mean_loss_episode[episode]+=loss
-        #print(f'mean_loss_episode after update: {mean_loss_episode[episode]}')
-
-        # Optimize the model
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-
-        return loss.item()
-    
-    """
     def optimize(self, mini_batch, target_dqn, mean_loss_episode, episode):
         current_q_list = []
         target_q_list = []
@@ -270,8 +213,8 @@ class PitfallDQL():
             else:
                 with torch.no_grad():
                     next_max_q = target_dqn(new_state).max()
-                    #target_q = reward + self.disc_factor * next_max_q
-                    target_q = (1 - self.alpha_nd) * current_q + self.alpha_nd * (reward + self.disc_factor * next_max_q)
+                    target_q = reward + self.disc_factor * next_max_q
+                    #target_q = (1 - self.learn_rate) * current_q + self.learn_rate * (reward + self.disc_factor * next_max_q)
 
             # Append target Q to the list
             target_q_list.append(target_q.squeeze(0))
@@ -318,7 +261,7 @@ class PitfallDQL():
                 memory.memory = loaded_state['replay_memory']                           
 
         # Policy network optimizer. 
-        self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate)                
+        self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate, weight_decay=0.001)                
 
         # List to keep track of rewards collected per episode. Initialize list to 0's.
         total_reward_per_episode = np.zeros(num_episodes_train)

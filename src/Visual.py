@@ -3,7 +3,7 @@ import torch
 import os
 import numpy as np
 
-prev_test=1
+prev_test=2
 version=1
 
 def load_q_table(filename=f'TQL_results\Tql_v1\p{prev_test}\q_table_training_p{prev_test}_tql_v{version}.pkl'):
@@ -13,7 +13,7 @@ def load_q_table(filename=f'TQL_results\Tql_v1\p{prev_test}\q_table_training_p{p
     print(f"Q-table loaded from {full_path}")
     return q_table
 
-def load_training_state_1(filename=f'DQL_results_determ_formula\Dqn_v1\p{prev_test}\Training_state_p{prev_test}_dqn_v{version}.pth'):
+def load_training_state_1(filename=f'DQL_results\Dqn_v1\p{prev_test}\Training_state_p{prev_test}_dqn_v{version}.pth'):
     full_path = os.path.join(os.getcwd(), filename)
     if os.path.isfile(full_path):
         state = torch.load(full_path)
