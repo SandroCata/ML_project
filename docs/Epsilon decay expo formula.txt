@@ -1,0 +1,10 @@
+eps_decay=(eps_min/eps)^(1/num_episodes)
+
+
+Note: alpha is the learning rate [0, 1). Larger values of alpha make the agent learn more quickly (and viceversa). 
+So low value -> previous values for Q of (s,a) are strongly preserved,
+high value -> new values for Q of (s,a) are strongly looked up to.
+
+Note: discount factor [0, 1).
+low value -> new rewards are weakly valued,
+high value -> new rewards are strongly valued.
