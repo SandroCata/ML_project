@@ -27,7 +27,7 @@ shutdown=False
 def shutdown_pc():
         os.system("shutdown /s /t 5")  # /s shuts pc down, /t 5 means: "with delay of 5 seconds"
 
-def write_config(curr_test, num_episodes_train, num_episodes_test, stability, epsilon, epsilon_decay, epsilon_min, learn_rate, weight_decay, disc_factor, rep_mem_size, batch_size, step_limit):
+def write_config(curr_test, num_episodes_train, num_episodes_test, stability, epsilon, epsilon_decay, epsilon_min, learn_rate, disc_factor, rep_mem_size, batch_size, step_limit):
     with open(f"Config_p{curr_test}_dqn_v1.txt", "w") as file:
         file.write(f"TRAINING/TESTING CONFIGURATION PART {curr_test}\n\n")
         file.write(f"Number of training episodes={num_episodes_train}\n")
@@ -37,7 +37,7 @@ def write_config(curr_test, num_episodes_train, num_episodes_test, stability, ep
         file.write(f"Epsilon Decay={epsilon_decay}\n")
         file.write(f"Epsilon Min={epsilon_min}\n")
         file.write(f"Alpha={learn_rate}\n")
-        file.write(f"Weight_decay={weight_decay}\n")
+        #file.write(f"Weight_decay={weight_decay}\n")
         file.write(f"Gamma={disc_factor}\n")
         file.write(f"Replay memory size={rep_mem_size}\n")
         file.write(f"Batch size={batch_size}\n")
@@ -153,10 +153,10 @@ class PitfallDQL():
     a=epsilon_min/explor_rate
     epsilon_decay=a**x                                   #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
-    learn_rate = 0.001                                   # learning rate (alpha)
-    weight_decay=0.001
+    learn_rate = 0.0001                                   # learning rate (alpha)
+    #weight_decay=0.001
     
-    disc_factor = 0.99                                   # discount rate (gamma)
+    disc_factor = 0.9                                   # discount rate (gamma)
     
     replay_memory_size = 100000                          # size of replay memory
     batch_size = 32                                      # size of the training data set sampled from the replay memory
@@ -247,7 +247,7 @@ class PitfallDQL():
 
         # Policy network optimizer.
 
-        self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate, weight_decay=self.weight_decay)                
+        self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate)#, weight_decay=self.weight_decay)                
 
         # Keep track of rewards collected per episode.
 
@@ -275,7 +275,7 @@ class PitfallDQL():
         time_per_episode=np.zeros(num_episodes_train)
         total_time_execution=0
 
-        write_config(curr_test, num_episodes_train, num_episodes_test, stability, self.explor_rate, self.epsilon_decay, self.epsilon_min, self.learn_rate, self.weight_decay, self.disc_factor, self.replay_memory_size, self.batch_size, step_limit)
+        write_config(curr_test, num_episodes_train, num_episodes_test, stability, self.explor_rate, self.epsilon_decay, self.epsilon_min, self.learn_rate, self.disc_factor, self.replay_memory_size, self.batch_size, step_limit)
 
         for i in range(episodes):
             state = env.reset()[0]  # Initialize to state 0

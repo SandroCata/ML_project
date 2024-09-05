@@ -104,9 +104,9 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
     a=epsilon_min/epsilon
     epsilon_decay=a**x                                  #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
-    alpha = 0.8                                   # learning rate (alpha)
+    alpha = 0.3                                   # learning rate (alpha)
     
-    gamma = 0.99                                  # discount rate (gamma) see how to modify during training
+    gamma = 0.9                                  # discount rate (gamma) see how to modify during training
 
     #counters for number of exploration and exploitation choices per episode
     explor_count=np.zeros(num_episodes)
