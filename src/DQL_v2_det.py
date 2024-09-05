@@ -30,7 +30,7 @@ def shutdown_pc():
         os.system("shutdown /s /t 5")
 
 def write_config(curr_test, num_episodes_train, num_episodes_test, stability, epsilon, epsilon_decay, epsilon_min, learn_rate, weight_decay, disc_factor, rep_mem_size, batch_size, step_limit):
-    with open(f"Config_nd_p{curr_test}_dqn_v2.txt", "w") as file:
+    with open(f"Config_det_p{curr_test}_dqn_v2.txt", "w") as file:
         file.write(f"Part {curr_test} of training and testing\n")
         file.write(f"Number of training episodes={num_episodes_train}\n")
         file.write(f"Number of test episodes={num_episodes_test}\n")
@@ -62,7 +62,7 @@ def move_file(src, dest, string):
         else:
             print(f"File '{file}' not found.")
 
-def save_training_state(target_dqn, memory, filename=f'Training_state_nd_p{curr_test}_dqn_v2.pth'):
+def save_training_state(target_dqn, memory, filename=f'Training_state_det_p{curr_test}_dqn_v2.pth'):
     full_path = os.path.join(os.getcwd(), filename)
     state = {
         #'policy_dqn_state_dict': policy_dqn.state_dict(),
@@ -73,7 +73,7 @@ def save_training_state(target_dqn, memory, filename=f'Training_state_nd_p{curr_
     torch.save(state, full_path)
     print(f"Dql saved to {full_path}")
 
-def load_training_state_1(filename=f'DQL_nd_results\Dqn_nd_v2\p{prev_test}\Training_state_nd_p{prev_test}_dqn_v2.pth'):
+def load_training_state_1(filename=f'DQL_det_results\Dqn_det_v2\p{prev_test}\Training_state_det_p{prev_test}_dqn_v2.pth'):
     full_path = os.path.join(os.getcwd(), filename)
     if os.path.isfile(full_path):
         state = torch.load(full_path)
@@ -83,7 +83,7 @@ def load_training_state_1(filename=f'DQL_nd_results\Dqn_nd_v2\p{prev_test}\Train
         print(f"No saved dql found at {full_path}")
         return None
     
-def load_training_state_2(filename=f'Training_state_nd_p{curr_test}_dqn_v2.pth'):
+def load_training_state_2(filename=f'Training_state_det_p{curr_test}_dqn_v2.pth'):
     full_path = os.path.join(os.getcwd(), filename)
     if os.path.isfile(full_path):
         state = torch.load(full_path)
@@ -179,9 +179,9 @@ class PitfallDQL():
     replay_memory_size = 100000                        # size of replay memory
     batch_size = 32                                    # size of the training data set sampled from the replay memory
 
-    alpha_nd=0.8                                       #alpha in non deterministic formula
+    #alpha_nd=0.8                                       #alpha in non deterministic formula
     weight_decay=0.001
-
+    
     # Neural Network
     loss_fn = nn.MSELoss()          # NN Loss function. MSE=Mean Squared Error.
     optimizer = None                # NN Optimizer. Later.
@@ -216,8 +216,8 @@ class PitfallDQL():
             else:
                 with torch.no_grad():
                     next_max_q = target_dqn(new_state).max()
-                    #target_q = reward + self.disc_factor * next_max_q
-                    target_q = (1 - self.alpha_nd) * current_q + self.alpha_nd * (reward + self.disc_factor * next_max_q)
+                    target_q = reward + self.disc_factor * next_max_q
+                    #target_q = (1 - self.alpha_nd) * current_q + self.alpha_nd * (reward + self.disc_factor * next_max_q)
 
             # Append target Q to the list
             #print(f'target_q={target_q.squeeze(0)}')
@@ -418,7 +418,7 @@ class PitfallDQL():
         plt.xlabel('Episode')
         plt.ylabel('Total Reward')
         plt.title(f'DQL Training p{curr_test}: Total Reward per Episode')
-        plt.savefig(f'Training_Reward_nd_p{curr_test}_dqn_v2.png')
+        plt.savefig(f'Training_Reward_det_p{curr_test}_dqn_v2.png')
         
 
         plt.figure()
@@ -428,7 +428,7 @@ class PitfallDQL():
         plt.xlabel('Episode')
         plt.ylabel('Mean Loss')
         plt.title(f'DQL Training p{curr_test}: Mean Loss per Episode')
-        plt.savefig(f'Mean_Loss_nd_p{curr_test}_dqn_v2.png')
+        plt.savefig(f'Mean_Loss_det_p{curr_test}_dqn_v2.png')
 
         """
         plt.figure()
@@ -451,21 +451,21 @@ class PitfallDQL():
         plt.xlabel('Episodes')
         plt.ylabel('Explorations')
         plt.title(f'DQL Training p{curr_test}: Explorations per Episode')
-        plt.savefig(f'Explorations_nd_p{curr_test}_dqn_v2.png')
+        plt.savefig(f'Explorations_det_p{curr_test}_dqn_v2.png')
 
         plt.figure()
         plt.plot(range(1, episodes + 1), exploit_count)
         plt.xlabel('Episodes')
         plt.ylabel('Exploitations')
         plt.title(f'DQL Training p{curr_test}: Exploitations per Episode')
-        plt.savefig(f'Exploitations_nd_p{curr_test}_dqn_v2.png')
+        plt.savefig(f'Exploitations_det_p{curr_test}_dqn_v2.png')
 
         plt.figure()
         plt.plot(range(1, episodes + 1), epsilon_history)
         plt.xlabel('Episodes')
         plt.ylabel('Epsilon')
         plt.title(f'DQL Training p{curr_test}: Epsilon value per Episode')
-        plt.savefig(f'Epsilon_nd_p{curr_test}_dqn_v2.png')
+        plt.savefig(f'Epsilon_det_p{curr_test}_dqn_v2.png')
 
         """
         plt.figure()
@@ -486,7 +486,7 @@ class PitfallDQL():
         #save time elapsed
         tot_time_minutes=total_time_execution/60
         mean_time_minutes=np.mean(time_per_episode)/60
-        with open(f"Training_Time_nd_p{curr_test}_dqn_v2.txt", "w") as file:
+        with open(f"Training_Time_det_p{curr_test}_dqn_v2.txt", "w") as file:
             if(tot_time_minutes<60):
                 file.write(f"Total time elapsed={tot_time_minutes:.0f} min")
             else:
@@ -587,7 +587,7 @@ class PitfallDQL():
         plt.xlabel('Episode')
         plt.ylabel('Total Reward')
         plt.title(f'DQL Test p{curr_test}: Total Reward per Episode')
-        plt.savefig(f'Test_Reward_nd_p{curr_test}_dqn_v2.png')
+        plt.savefig(f'Test_Reward_det_p{curr_test}_dqn_v2.png')
 
         """
         plt.figure()
@@ -603,12 +603,12 @@ class PitfallDQL():
         plt.xlabel('Episodes')
         plt.ylabel('Steps')
         plt.title(f'DQL Test p{curr_test}: Steps per Episode')
-        plt.savefig(f'Test_Steps_nd_p{curr_test}_dqn_v2.png')
+        plt.savefig(f'Test_Steps_det_p{curr_test}_dqn_v2.png')
 
         #save time elapsed
         tot_time_minutes=total_time_execution/60
         mean_time_minutes=np.mean(time_per_episode)/60
-        with open(f"Test_Time_nd_p{curr_test}_dqn_v2.txt", "w") as file:
+        with open(f"Test_Time_det_p{curr_test}_dqn_v2.txt", "w") as file:
             if(tot_time_minutes<60):
                 file.write(f"Total time elapsed={tot_time_minutes:.0f} min")
             else:
@@ -630,8 +630,8 @@ if __name__ == '__main__':
     pitfall_dql.test(env=env)
 
     src = os.getcwd()
-    dest = f'{src}\DQL_nd_results\Dqn_nd_v2\p{curr_test}'
-    string = f'nd_p{curr_test}_dqn_v2'
+    dest = f'{src}\DQL_det_results\Dqn_det_v2\p{curr_test}'
+    string = f'det_p{curr_test}_dqn_v2'
 
     move_file(src, dest, string)
 
