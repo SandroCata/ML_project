@@ -3,7 +3,7 @@ import torch
 import os
 import numpy as np
 
-prev_test=2
+prev_test=3
 version=1
 
 def load_q_table(filename=f'TQL_results\Tql_v1\p{prev_test}\q_table_training_p{prev_test}_tql_v{version}.pkl'):
@@ -32,5 +32,4 @@ if __name__ == '__main__':
    #Q = load_q_table2()
    #print(len(Q))
    DQN = load_training_state_1()
-   #print_non_zero_q_values(Q)
    print_dqn_info(DQN)

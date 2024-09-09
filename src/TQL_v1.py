@@ -7,16 +7,16 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=False
+pre_trained=True
 save=True
 
-prev_test=1
-curr_test=1
+prev_test=2
+curr_test=3
 
-num_episodes_train = 500
+num_episodes_train = 1000
 num_episodes_test = 2
 
-stability=50
+stability=100
 
 shutdown=False
 

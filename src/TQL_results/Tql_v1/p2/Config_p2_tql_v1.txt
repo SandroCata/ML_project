@@ -1,0 +1,11 @@
+TRAINING/TESTING CONFIGURATION PART 2
+
+Number of training episodes=500
+Number of test episodes=2
+Stability=50
+Epsilon=1
+Epsilon Decay=0.99642985946637
+Epsilon Min=0.2
+Alpha=0.3
+Gamma=0.9
+Step limit for environment reset=17000
