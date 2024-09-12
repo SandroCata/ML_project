@@ -11,11 +11,11 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=True
+pre_trained=False
 save=True
 
-prev_test=3
-curr_test=4
+prev_test=1
+curr_test=1
 
 num_episodes_train = 1000
 num_episodes_test = 2
@@ -370,7 +370,7 @@ class PitfallDQL():
 
         # Window of moving average
 
-        window_size = 50
+        window_size = 100
 
         # Moving average
         

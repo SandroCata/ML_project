@@ -7,11 +7,11 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=True
+pre_trained=False
 save=True
 
-prev_test=2
-curr_test=3
+prev_test=1
+curr_test=1
 
 num_episodes_train = 1000
 num_episodes_test = 2
@@ -222,7 +222,7 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
         save_q_table(Q)
 
     # window of moving average
-    window_size = 50
+    window_size = 100
 
     # Moving average
     

@@ -1,0 +1,2 @@
+Total time = 16 h
+Mean time per episode = 1 min

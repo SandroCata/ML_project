@@ -3,7 +3,7 @@ import torch
 import os
 import numpy as np
 
-prev_test=3
+prev_test=5
 version=1
 
 def load_q_table(filename=f'TQL_results\Tql_v1\p{prev_test}\q_table_training_p{prev_test}_tql_v{version}.pkl'):
