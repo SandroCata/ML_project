@@ -14,6 +14,8 @@ import shutil
 pre_trained=True
 save=True
 
+train_numb=1
+
 prev_test=3
 curr_test=4
 
@@ -582,7 +584,7 @@ if __name__ == '__main__':
 
     #ORDERING PERFORMANCE FILES
     src = os.getcwd()
-    dest = f'{src}\DQL_results\Dqn_v2\p{curr_test}'
+    dest = f'{src}\DQL_results_{train_numb}\Dqn_v2\p{curr_test}'
     string = f'p{curr_test}_dqn_v2'
     move_file(src, dest, string)
     
