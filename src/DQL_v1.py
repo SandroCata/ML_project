@@ -73,7 +73,7 @@ def save_training_state(target_dqn, memory, filename=f'Training_state_p{curr_tes
     torch.save(state, full_path)
     print(f"Dql saved to {full_path}")
 
-def load_training_state_1(filename=f'DQL_results\Dqn_v1\p{prev_test}\Training_state_p{prev_test}_dqn_v1.pth'):
+def load_training_state_1(filename=f'DQL_results_{train_numb}\Dqn_v1\p{prev_test}\Training_state_p{prev_test}_dqn_v1.pth'):
     full_path = os.path.join(os.getcwd(), filename)
     if os.path.isfile(full_path):
         state = torch.load(full_path)

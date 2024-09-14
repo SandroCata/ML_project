@@ -11,13 +11,13 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=True
+pre_trained=False
 save=True
 
-train_numb=1
+train_numb=3
 
-prev_test=3
-curr_test=4
+prev_test=1
+curr_test=1
 
 num_episodes_train = 1000
 num_episodes_test = 2
@@ -73,7 +73,7 @@ def save_training_state(target_dqn, memory, filename=f'Training_state_p{curr_tes
     torch.save(state, full_path)
     print(f"Dql saved to {full_path}")
 
-def load_training_state_1(filename=f'DQL_results\Dqn_v2\p{prev_test}\Training_state_p{prev_test}_dqn_v2.pth'):
+def load_training_state_1(filename=f'DQL_results_{train_numb}\Dqn_v2\p{prev_test}\Training_state_p{prev_test}_dqn_v2.pth'):
     full_path = os.path.join(os.getcwd(), filename)
     if os.path.isfile(full_path):
         state = torch.load(full_path)
@@ -382,7 +382,7 @@ class PitfallDQL():
 
         # Window of moving average
 
-        window_size = 50
+        window_size = 100
 
         # Moving average
 

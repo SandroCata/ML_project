@@ -67,7 +67,7 @@ def save_q_table(q_table, filename=f'q_table_training_p{curr_test}_tql_v2.pkl'):
         pickle.dump(q_table, f)
     print(f"Q-table saved to {full_path}")
 
-def load_q_table(filename=f'TQL_results\Tql_v2\p{prev_test}\q_table_training_p{prev_test}_tql_v2.pkl'):
+def load_q_table(filename=f'TQL_results_{train_numb}\Tql_v2\p{prev_test}\q_table_training_p{prev_test}_tql_v2.pkl'):
     full_path = os.path.join(os.getcwd(), filename)
     with open(full_path, 'rb') as f:
         q_table = pickle.load(f)
