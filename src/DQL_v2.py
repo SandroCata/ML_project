@@ -105,27 +105,22 @@ def seed_everything(seed: int, env):
     return
 
 #INITIALIZATION OF GPU USE
+dev_name=f'{torch.cuda.get_device_name(torch.cuda.current_device())}'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"Device: {device}")
+print(f"Device: {dev_name} ({device})")
 
 #DQN
 class DQN(nn.Module):
     def __init__(self, state_size, h1_nodes, h2_nodes, action_size):
         super().__init__()
 
-        # Define network layers
-
         self.fc1 = nn.Linear(state_size, h1_nodes)   # first fully connected layer
         self.fc2 = nn.Linear(h1_nodes, h2_nodes)     # second fully connected layer
-        #self.fc3 = nn.Linear(h2_nodes, h3_nodes)     # third fully connected layer
-        #self.fc4 = nn.Linear(h3_nodes, h4_nodes)     # fourth fully connected layer
         self.out = nn.Linear(h2_nodes, action_size)  # output layer
 
     def forward(self, x):
         x = F.relu(self.fc1(x)) # Apply rectified linear unit (ReLU) activation
         x = F.relu(self.fc2(x)) # Apply rectified linear unit (ReLU) activation
-        #x = F.relu(self.fc3(x)) # Apply rectified linear unit (ReLU) activation
-        #x = F.relu(self.fc4(x)) # Apply rectified linear unit (ReLU) activation
         x = self.out(x)         # Calculate output
         return x
 
@@ -150,17 +145,17 @@ class PitfallDQL():
 
     # Hyperparameters
     explor_rate=1                                       #epsilon
-    epsilon_min=0.2
+    epsilon_min=0.1
     a=epsilon_min/explor_rate
     epsilon_decay=a**x                                  #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
-    learn_rate = 0.0001                                   # learning rate (alpha)
+    learn_rate = 0.001                                   # learning rate (alpha)
     #weight_decay=0.001
 
-    disc_factor = 0.9                                  # discount rate (gamma)
+    disc_factor = 0.99                                  # discount rate (gamma)
 
     replay_memory_size = 100000                        # size of replay memory
-    batch_size = 32                                    # size of the training data set sampled from the replay memory
+    batch_size = 16                                    # size of the training data set sampled from the replay memory
     
     # Neural Network
     loss_fn = nn.MSELoss()          # NN Loss function. MSE=Mean Squared Error.

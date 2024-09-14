@@ -105,27 +105,22 @@ def seed_everything(seed: int, env):
     return
 
 #INITIALIZATION OF GPU USE
+dev_name=f'{torch.cuda.get_device_name(torch.cuda.current_device())}'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"Device: {device}")
+print(f"Device: {dev_name} ({device})")
 
 #DQN
 class DQN(nn.Module):
     def __init__(self, state_size, h1_nodes, h2_nodes, action_size):
         super().__init__()
 
-        # Define network layers
-
         self.fc1 = nn.Linear(state_size, h1_nodes)   # first fully connected layer
         self.fc2 = nn.Linear(h1_nodes, h2_nodes)     # second fully connected layer
-        #self.fc3 = nn.Linear(h2_nodes, h3_nodes)     # third fully connected layer
-        #self.fc4 = nn.Linear(h3_nodes, h4_nodes)     # fourth fully connected layer
         self.out = nn.Linear(h2_nodes, action_size)  # output layer
 
     def forward(self, x):
         x = F.relu(self.fc1(x)) # Apply rectified linear unit (ReLU) activation
         x = F.relu(self.fc2(x)) # Apply rectified linear unit (ReLU) activation
-        #x = F.relu(self.fc3(x)) # Apply rectified linear unit (ReLU) activation
-        #x = F.relu(self.fc4(x)) # Apply rectified linear unit (ReLU) activation
         x = self.out(x)         # Calculate output
         return x
 
@@ -151,17 +146,17 @@ class PitfallDQL():
     # Hyperparameters
 
     explor_rate=1                                        #epsilon
-    epsilon_min=0.2
+    epsilon_min=0.1
     a=epsilon_min/explor_rate
     epsilon_decay=a**x                                   #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
-    learn_rate = 0.0001                                   # learning rate (alpha)
+    learn_rate = 0.001                                   # learning rate (alpha)
     #weight_decay=0.001
     
-    disc_factor = 0.9                                   # discount rate (gamma)
+    disc_factor = 0.99                                   # discount rate (gamma)
     
     replay_memory_size = 100000                          # size of replay memory
-    batch_size = 32                                      # size of the training data set sampled from the replay memory
+    batch_size = 16                                      # size of the training data set sampled from the replay memory
 
     # Neural Network
     loss_fn = nn.MSELoss()                               # NN Loss function. MSE=Mean Squared Error.
@@ -240,14 +235,31 @@ class PitfallDQL():
         # Create target network.
 
         target_dqn = DQN(state_size=state_size, h1_nodes=512, h2_nodes=128, action_size=num_actions).to(device)
+
+        #model_device = next(target_dqn.parameters()).device
+        #print(f"Target DQN is on device: {model_device}")
+
+        """
+        print("State_dict del modello prima del caricamento del preaddestrato:")
+        pre_load_state_dict = target_dqn.state_dict()
+        for key, value in pre_load_state_dict.items():
+            print(f"{key}: {value}")
         
         if pre_trained:
             loaded_state = load_training_state_1()
             if loaded_state is not None:
                 target_dqn.load_state_dict(loaded_state['target_dqn_state_dict'])
-                memory.memory = loaded_state['replay_memory']                           
+                memory.memory = loaded_state['replay_memory']
 
-        # Policy network optimizer.
+        # Stampa lo stato del state_dict dopo aver caricato il modello preaddestrato
+        print("\nState_dict del modello dopo il caricamento del preaddestrato:")
+        post_load_state_dict = target_dqn.state_dict()
+        for key, value in post_load_state_dict.items():
+            print(f"{key}: {value}")
+
+        """                       
+
+        # Target network optimizer.
 
         self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate)#, weight_decay=self.weight_decay)                
 
