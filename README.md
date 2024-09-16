@@ -1,1 +1,1 @@
-q_tables and eventually dqns of previous parts are kept on drive due to oversize
+q_tables and dqns of previous parts are kept on drive due to oversize
