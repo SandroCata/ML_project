@@ -19,7 +19,7 @@ train_numb=3
 prev_test=1
 curr_test=2
 
-num_episodes_train = 1000
+num_episodes_train = 1100
 num_episodes_test = 2
 
 stability=100
@@ -250,6 +250,7 @@ class PitfallDQL():
             if loaded_state is not None:
                 target_dqn.load_state_dict(loaded_state['target_dqn_state_dict'])
                 memory.memory = loaded_state['replay_memory']
+                
         """
         # Stampa lo stato del state_dict dopo aver caricato il modello preaddestrato
         print("\nState_dict del modello dopo il caricamento del preaddestrato:")
@@ -398,7 +399,7 @@ class PitfallDQL():
         ]
 
         #x-axis for moving average centered in window size:
-        #Every window_size episode an avg pint is computed and displayedin the statistics
+        #every window_size episode an avg point is computed and displayed in the statistics
 
         x_moving_avg = np.arange(window_size, episodes + 1, window_size)
 
@@ -474,7 +475,7 @@ class PitfallDQL():
         steps_taken=np.zeros(num_episodes_test) 
         step_limit=17000
 
-        #time elapsed for each episode and cumulative time
+        #time elapsed per episode and cumulative time
 
         time_per_episode=np.zeros(num_episodes_train)
         total_time_execution=0

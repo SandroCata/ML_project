@@ -1,0 +1,13 @@
+TRAINING/TESTING CONFIGURATION PART 2
+
+Number of training episodes=1100
+Number of test episodes=2
+Stability=100
+Epsilon=1
+Epsilon Decay=0.9760536373079002
+Epsilon Min=0.1
+Alpha=0.001
+Gamma=0.99
+Replay memory size=100000
+Batch size=16
+Step limit for environment reset=17000
