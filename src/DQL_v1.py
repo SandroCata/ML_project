@@ -151,7 +151,6 @@ class PitfallDQL():
     epsilon_decay=a**x                                   #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
     learn_rate = 0.001                                   # learning rate (alpha)
-    #weight_decay=0.001
     
     disc_factor = 0.99                                   # discount rate (gamma)
     
@@ -244,13 +243,14 @@ class PitfallDQL():
         pre_load_state_dict = target_dqn.state_dict()
         for key, value in pre_load_state_dict.items():
             print(f"{key}: {value}")
+        """
         
         if pre_trained:
             loaded_state = load_training_state_1()
             if loaded_state is not None:
                 target_dqn.load_state_dict(loaded_state['target_dqn_state_dict'])
                 memory.memory = loaded_state['replay_memory']
-
+        """
         # Stampa lo stato del state_dict dopo aver caricato il modello preaddestrato
         print("\nState_dict del modello dopo il caricamento del preaddestrato:")
         post_load_state_dict = target_dqn.state_dict()

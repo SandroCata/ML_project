@@ -108,7 +108,7 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
 
     alpha = 0.5                                   # learning rate (alpha)
     
-    gamma = 0.99                                  # discount rate (gamma) see how to modify during training
+    gamma = 0.9                                  # discount rate (gamma) see how to modify during training
 
     #counters for number of exploration and exploitation choices per episode
     explor_count=np.zeros(num_episodes)

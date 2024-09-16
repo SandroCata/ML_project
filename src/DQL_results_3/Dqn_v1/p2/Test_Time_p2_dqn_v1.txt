@@ -1,2 +1,0 @@
-Total time = 0 min
-Mean time per episode = 0 min

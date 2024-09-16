@@ -16,13 +16,13 @@ save=True
 
 train_numb=3
 
-prev_test=1
-curr_test=2
+prev_test=2
+curr_test=3
 
-num_episodes_train = 1000
+num_episodes_train = 100
 num_episodes_test = 2
 
-stability=100
+stability=5
 
 shutdown=False
 
@@ -150,12 +150,11 @@ class PitfallDQL():
     epsilon_decay=a**x                                  #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
     learn_rate = 0.001                                   # learning rate (alpha)
-    #weight_decay=0.001
 
     disc_factor = 0.99                                  # discount rate (gamma)
 
     replay_memory_size = 100000                        # size of replay memory
-    batch_size = 16                                    # size of the training data set sampled from the replay memory
+    batch_size = 32                                    # size of the training data set sampled from the replay memory
     
     # Neural Network
     loss_fn = nn.MSELoss()          # NN Loss function. MSE=Mean Squared Error.
@@ -377,7 +376,7 @@ class PitfallDQL():
 
         # Window of moving average
 
-        window_size = 100
+        window_size = 10
 
         # Moving average
 
