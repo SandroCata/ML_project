@@ -3,17 +3,18 @@ import torch
 import os
 import numpy as np
 
-prev_test=5
+training=1
+iter=1
 version=1
 
-def load_q_table(filename=f'TQL_results\Tql_v1\p{prev_test}\q_table_training_p{prev_test}_tql_v{version}.pkl'):
+def load_q_table(filename=f'TQL_results_{training}\Tql_v{version}\p{iter}\q_table_training_p{iter}_tql_v{version}.pkl'):
     full_path = os.path.join(os.getcwd(), filename)
     with open(full_path, 'rb') as f:
         q_table = pickle.load(f)
     print(f"Q-table loaded from {full_path}")
     return q_table
 
-def load_training_state_1(filename=f'DQL_results\Dqn_v1\p{prev_test}\Training_state_p{prev_test}_dqn_v{version}.pth'):
+def load_training_state_1(filename=f'DQL_results_{training}\Dqn_v{version}\p{iter}\Training_state_p{iter}_dqn_v{version}.pth'):
     full_path = os.path.join(os.getcwd(), filename)
     if os.path.isfile(full_path):
         state = torch.load(full_path)
@@ -24,7 +25,7 @@ def load_training_state_1(filename=f'DQL_results\Dqn_v1\p{prev_test}\Training_st
         return None
 
 def print_dqn_info(dqn):
-    print(f"DQN info p{prev_test}:")
+    print(f"DQN info p{iter}:")
     print(dqn['target_dqn_state_dict'])
     #print(dqn['replay_memory'])
     
