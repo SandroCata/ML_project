@@ -11,15 +11,15 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=True
+pre_trained=False
 save=True
 
-train_numb=3
+train_numb=1
 
-prev_test=2
-curr_test=3
+prev_test=1
+curr_test=1
 
-num_episodes_train = 100
+num_episodes_train = 1000
 num_episodes_test = 2
 
 stability=5
@@ -144,10 +144,11 @@ class PitfallDQL():
     x=1/(num_episodes_train-stability)
 
     # Hyperparameters
+
     explor_rate=1                                       #epsilon
     epsilon_min=0.1
     a=epsilon_min/explor_rate
-    epsilon_decay=a**x                                  #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
+    epsilon_decay=a**x                                  #(exponential decay) 
 
     learn_rate = 0.001                                   # learning rate (alpha)
 
@@ -157,7 +158,7 @@ class PitfallDQL():
     batch_size = 32                                    # size of the training data set sampled from the replay memory
     
     # Neural Network
-    loss_fn = nn.MSELoss()          # NN Loss function. MSE=Mean Squared Error.
+    loss_fn = nn.MSELoss()          # NN Loss function - MSE=Mean Squared Error.
     optimizer = None                # NN Optimizer.
 
     #from 0 to 17
@@ -177,12 +178,9 @@ class PitfallDQL():
             action = torch.tensor(action, dtype=torch.int64).to(device)
             new_state = torch.tensor(new_state, dtype=torch.float32).to(device)
             reward = torch.tensor(reward, dtype=torch.float32).to(device)
-            #done = torch.tensor(action, dtype=torch.int64).to(device)
-
 
             # Compute the current Q value for the pair (state, action) using with target network
 
-            #current_q = target_dqn(state).gather(0, action.unsqueeze(0))
             current_q = target_dqn(state)[action]
             current_q_list.append(current_q)
             #print(f'q_value 2={current_q}')
@@ -242,7 +240,7 @@ class PitfallDQL():
                 target_dqn.load_state_dict(loaded_state['target_dqn_state_dict'])
                 memory.memory = loaded_state['replay_memory']                          
 
-        # Policy network optimizer. 
+        # Target network optimizer. 
 
         self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate)#, weight_decay=self.weight_decay)                
 
@@ -275,7 +273,7 @@ class PitfallDQL():
         write_config(curr_test, num_episodes_train, num_episodes_test, stability, self.explor_rate, self.epsilon_decay, self.epsilon_min, self.learn_rate, self.disc_factor, self.replay_memory_size, self.batch_size, step_limit)
             
         for i in range(episodes):
-            state, info = env.reset()  # Initialize to state 0
+            state, info = env.reset()  
             start_time=time.time()
             current_lives=info['lives']
             done=False

@@ -11,15 +11,15 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=True
+pre_trained=False
 save=True
 
-train_numb=3
+train_numb=1
 
 prev_test=1
-curr_test=2
+curr_test=1
 
-num_episodes_train = 1100
+num_episodes_train = 1000
 num_episodes_test = 2
 
 stability=100
@@ -148,7 +148,7 @@ class PitfallDQL():
     explor_rate=1                                        #epsilon
     epsilon_min=0.1
     a=epsilon_min/explor_rate
-    epsilon_decay=a**x                                   #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
+    epsilon_decay=a**x                                   #exponential decay
 
     learn_rate = 0.001                                   # learning rate (alpha)
     
@@ -158,8 +158,8 @@ class PitfallDQL():
     batch_size = 16                                      # size of the training data set sampled from the replay memory
 
     # Neural Network
-    loss_fn = nn.MSELoss()                               # NN Loss function. MSE=Mean Squared Error.
-    optimizer = None                                     # NN Optimizer. Later.
+    loss_fn = nn.MSELoss()                               # NN Loss function - MSE=Mean Squared Error
+    optimizer = None                                     # NN Optimizer
 
     #from 0 to 17
     #FULL_ACTIONS = ['NOOP', 'FIRE', 'UP', 'RIGHT', 'LEFT', 'DOWN', 
@@ -178,12 +178,10 @@ class PitfallDQL():
             action = torch.tensor(action, dtype=torch.int64).to(device)
             new_state = torch.tensor(new_state, dtype=torch.float32).to(device)
             reward = torch.tensor(reward, dtype=torch.float32).to(device)
-            #done = torch.tensor(action, dtype=torch.int64).to(device)
 
 
             # Compute the current Q value using the target network
 
-            #current_q = target_dqn(state).gather(0, action.unsqueeze(0))
             current_q = target_dqn(state)[action]
             current_q_list.append(current_q)
             #print(f'q_value={current_q}')
@@ -231,36 +229,17 @@ class PitfallDQL():
         
         memory = ReplayMemory(self.replay_memory_size)
 
-        # Create target network.
+        # Initialization of target network.
 
         target_dqn = DQN(state_size=state_size, h1_nodes=512, h2_nodes=128, action_size=num_actions).to(device)
-
-        #model_device = next(target_dqn.parameters()).device
-        #print(f"Target DQN is on device: {model_device}")
-
-        """
-        print("State_dict del modello prima del caricamento del preaddestrato:")
-        pre_load_state_dict = target_dqn.state_dict()
-        for key, value in pre_load_state_dict.items():
-            print(f"{key}: {value}")
-        """
         
         if pre_trained:
             loaded_state = load_training_state_1()
             if loaded_state is not None:
                 target_dqn.load_state_dict(loaded_state['target_dqn_state_dict'])
-                memory.memory = loaded_state['replay_memory']
-                
-        """
-        # Stampa lo stato del state_dict dopo aver caricato il modello preaddestrato
-        print("\nState_dict del modello dopo il caricamento del preaddestrato:")
-        post_load_state_dict = target_dqn.state_dict()
-        for key, value in post_load_state_dict.items():
-            print(f"{key}: {value}")
+                memory.memory = loaded_state['replay_memory']                     
 
-        """                       
-
-        # Target network optimizer.
+        # Initialization of the optimizer.
 
         self.optimizer = torch.optim.Adam(target_dqn.parameters(), lr=self.learn_rate)#, weight_decay=self.weight_decay)                
 
@@ -290,10 +269,12 @@ class PitfallDQL():
         time_per_episode=np.zeros(num_episodes_train)
         total_time_execution=0
 
+        #Log for current configuration
+
         write_config(curr_test, num_episodes_train, num_episodes_test, stability, self.explor_rate, self.epsilon_decay, self.epsilon_min, self.learn_rate, self.disc_factor, self.replay_memory_size, self.batch_size, step_limit)
 
         for i in range(episodes):
-            state = env.reset()[0]  # Initialize to state 0
+            state = env.reset()[0]  
             start_time=time.time()
             done=False
             step_count=0

@@ -7,13 +7,13 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=True
+pre_trained=False
 save=True
 
-train_numb=3
+train_numb=1
 
-prev_test=3
-curr_test=4
+prev_test=1
+curr_test=1
 
 num_episodes_train = 1000
 num_episodes_test = 2
@@ -104,11 +104,11 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
     epsilon=1                                       #epsilon
     epsilon_min=0.1
     a=epsilon_min/epsilon
-    epsilon_decay=a**x                                  #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
+    epsilon_decay=a**x                                  #(exponential decay) 
 
     alpha = 0.5                                   # learning rate (alpha)
     
-    gamma = 0.9                                  # discount rate (gamma) see how to modify during training
+    gamma = 0.9                                  # discount rate (gamma) 
 
     #counters for number of exploration and exploitation choices per episode
     explor_count=np.zeros(num_episodes)
