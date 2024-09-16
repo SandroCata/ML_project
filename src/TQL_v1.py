@@ -7,13 +7,13 @@ import time
 import shutil
 
 #variables for loading and saving Q-table for future use
-pre_trained=False
+pre_trained=True
 save=True
 
 train_numb=3
 
-prev_test=1
-curr_test=1
+prev_test=3
+curr_test=4
 
 num_episodes_train = 1000
 num_episodes_test = 2
@@ -106,7 +106,7 @@ def train(env, pre_trained=pre_trained, save=save, num_episodes=num_episodes_tra
     a=epsilon_min/epsilon
     epsilon_decay=a**x                                  #(exponential decay) so that the last 30 episodes epsilon is stable at 0.2
 
-    alpha = 0.99                                   # learning rate (alpha)
+    alpha = 0.5                                   # learning rate (alpha)
     
     gamma = 0.99                                  # discount rate (gamma) see how to modify during training
 
